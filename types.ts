@@ -58,6 +58,7 @@ export interface GlobalDevice {
   frameCount: number;
   firmwareVersion: string;
   projectName: string | null;
+  deviceGroupName?: string | null; // Added field for Device Group
   rpsStatus: 'active' | 'inactive';
   imageUrl: string;
   shareType?: 'by_me' | 'to_me';

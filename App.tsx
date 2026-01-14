@@ -21,6 +21,7 @@ import { ProjectCard } from './components/ProjectCard';
 import { AssetTypeManager } from './components/AssetTypeManager';
 import { ProjectDetailView } from './components/ProjectDetailView';
 import { GlobalDeviceManager } from './components/GlobalDeviceManager';
+import { CreateProjectWizard } from './components/CreateProjectWizard';
 
 const INITIAL_PROJECTS: IoTProject[] = [
   {
@@ -117,6 +118,9 @@ const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [projects, setProjects] = useState<IoTProject[]>(INITIAL_PROJECTS);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Wizard State
+  const [showCreateWizard, setShowCreateWizard] = useState(false);
 
   const filteredProjects = useMemo(() => {
     return projects.filter(p => 
@@ -142,6 +146,12 @@ const App: React.FC = () => {
     setProjects(prev => prev.filter(p => p.id !== id));
     setCurrentView('projects');
     setSelectedProjectId(null);
+  };
+
+  const handleProjectCreated = (newProject: IoTProject) => {
+    setProjects(prev => [newProject, ...prev]);
+    setShowCreateWizard(false);
+    handleEnterProject(newProject.id);
   };
 
   const renderContent = () => {
@@ -178,7 +188,10 @@ const App: React.FC = () => {
                   <Tags size={18} />
                   Manage Asset Types
                 </button>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-wide">
+                <button 
+                  onClick={() => setShowCreateWizard(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-wide"
+                >
                   <Plus size={18} strokeWidth={3} />
                   Create Project
                 </button>
@@ -248,6 +261,14 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
+      {/* Create Project Wizard Overlay */}
+      {showCreateWizard && (
+        <CreateProjectWizard 
+          onClose={() => setShowCreateWizard(false)}
+          onSuccess={handleProjectCreated}
+        />
+      )}
+
       {/* Left Sidebar */}
       <aside 
         className={`bg-[#0b1221] text-white flex flex-col hidden lg:flex shrink-0 border-r border-slate-800 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'w-16' : 'w-64'}`}

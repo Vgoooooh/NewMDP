@@ -6,24 +6,222 @@ import {
   Edit3, 
   Globe, 
   Lock, 
+  // Base Icons
   Building2, 
   Layers, 
   Maximize, 
   DoorOpen, 
   MoreVertical,
-  Search,
-  Check,
-  X,
-  LucideIcon
+  Search, 
+  Check, 
+  X, 
+  LucideIcon, 
+  // Expanded Icon Set
+  Home, Factory, Store, Landmark, Warehouse, Tent,
+  Thermometer, Droplets, Wind, Sun, Cloud, Leaf, Zap, Lightbulb, Fan,
+  Cpu, Server, Wifi, Router, Monitor, Smartphone, Printer, Camera, Video,
+  Shield, Siren, FireExtinguisher,
+  Truck, Car, Bike, Ship, Plane, Box, Container,
+  User, Users, ShoppingCart, Briefcase, Coffee, Wrench, Hammer, MapPin, Flag,
+  Speaker, Tv, Mic, Anchor, Archive, Armchair, Bath, Bed, Bell,
+  Bike as Bicycle, Bus, Calculator, Calendar, Cast, CircleDollarSign,
+  Clipboard, Clock, Compass, Database, Disc, DollarSign, Dumbbell,
+  Eye, FileText, Film, Filter, Fingerprint, Flame, Flashlight,
+  Flower, Folder, Fuel, Gamepad2, Gauge, Gift, Glasses, GraduationCap,
+  HardDrive, Headphones, Heart, Highlighter, Hourglass, Image, Infinity,
+  Info, Key, Keyboard, Lamp, Laptop, LifeBuoy, Link, LockOpen,
+  Mail, Map, Medal, Megaphone, Menu, MessageCircle, Mic2, Microscope,
+  Moon, Mouse, Music, Navigation, Network, Newspaper, Package, Palette,
+  Paperclip, Pause, Phone, PieChart, Pin, Play, Plug, Pocket, Power,
+  Radio, Receipt, RefreshCcw, Repeat, Rocket, RotateCw, Rss, Ruler,
+  Save, Scale, Scissors, ScreenShare, SearchCheck, Send, Settings,
+  Share2, Sheet, ShoppingBag, Shovel, Shuffle, Sidebar, Signal,
+  Skull, Slash, Sliders, Smile, Snowflake, Sofa, Sparkles, Speaker as SpeakerIcon,
+  Star, Stethoscope, StopCircle, StretchHorizontal, SunMedium, Sunrise, Sunset,
+  SwitchCamera, Table, Tablet, Tag, Target, Terminal, ThumbsUp, Ticket,
+  Timer, ToggleLeft, ToggleRight, Tornado, TrafficCone, Train,
+  Trash, TreeDeciduous, TreePine, Trophy, Umbrella, Unlock, Upload,
+  Usb, UserCheck, UserPlus, UserMinus, UserX, Voicemail, Volume, Volume2,
+  Wallet, Watch, Webcam, Weight, Wine, WrapText, ZoomIn
 } from 'lucide-react';
 import { AssetType, IoTProject } from '../types';
 
-// Icon mapping for display
+// Expanded Icon Registry
 const IconRegistry: Record<string, LucideIcon> = {
+  // Structure & Places
   'Building2': Building2,
+  'Home': Home,
+  'Factory': Factory,
+  'Store': Store,
+  'Landmark': Landmark,
+  'Warehouse': Warehouse,
+  'Tent': Tent,
+  'Building': Building2,
+  
+  // Spaces & Zones
   'Layers': Layers,
   'Maximize': Maximize,
   'DoorOpen': DoorOpen,
+  'MapPin': MapPin,
+  'Flag': Flag,
+  'Map': Map,
+  'Navigation': Navigation,
+
+  // Environment & Nature
+  'Thermometer': Thermometer,
+  'Droplets': Droplets,
+  'Wind': Wind,
+  'Sun': Sun,
+  'Cloud': Cloud,
+  'Leaf': Leaf,
+  'Zap': Zap,
+  'Lightbulb': Lightbulb,
+  'Fan': Fan,
+  'Flower': Flower,
+  'TreeDeciduous': TreeDeciduous,
+  'TreePine': TreePine,
+  'Snowflake': Snowflake,
+  'Flame': Flame,
+  'Sunset': Sunset,
+
+  // IT & Electronics
+  'Cpu': Cpu,
+  'Server': Server,
+  'Wifi': Wifi,
+  'Router': Router,
+  'Monitor': Monitor,
+  'Smartphone': Smartphone,
+  'Laptop': Laptop,
+  'Tablet': Tablet,
+  'Printer': Printer,
+  'Camera': Camera,
+  'Video': Video,
+  'Webcam': Webcam,
+  'Keyboard': Keyboard,
+  'Mouse': Mouse,
+  'HardDrive': HardDrive,
+  'Database': Database,
+  'Network': Network,
+  'Signal': Signal,
+
+  // Security & Safety
+  'Lock': Lock,
+  'Unlock': Unlock,
+  'Shield': Shield,
+  'Siren': Siren,
+  'FireExtinguisher': FireExtinguisher,
+  'Key': Key,
+  'Fingerprint': Fingerprint,
+  'Eye': Eye,
+  'LifeBuoy': LifeBuoy,
+
+  // Logistics & Transport
+  'Truck': Truck,
+  'Car': Car,
+  'Bike': Bike,
+  'Bus': Bus,
+  'Train': Train,
+  'Ship': Ship,
+  'Plane': Plane,
+  'Rocket': Rocket,
+  'Box': Box,
+  'Package': Package,
+  'Container': Container,
+  'Archive': Archive,
+  'Anchor': Anchor,
+
+  // Furniture & Objects
+  'Armchair': Armchair,
+  'Sofa': Sofa,
+  'Bed': Bed,
+  'Bath': Bath,
+  'Lamp': Lamp,
+  'Table': Table,
+  'Trash2': Trash2,
+  'Umbrella': Umbrella,
+  'Clock': Clock,
+  'Watch': Watch,
+  'Hourglass': Hourglass,
+  'Timer': Timer,
+
+  // Tools & Operations
+  'Wrench': Wrench,
+  'Hammer': Hammer,
+  'Settings': Settings,
+  'Sliders': Sliders,
+  'Gauge': Gauge,
+  'Compass': Compass,
+  'Ruler': Ruler,
+  'Scissors': Scissors,
+  'Clipboard': Clipboard,
+  'FileText': FileText,
+  'Search': Search,
+  'Filter': Filter,
+  'Power': Power,
+  'Plug': Plug,
+  'Usb': Usb,
+  'Battery': Zap, // Using Zap as placeholder for battery if Battery not explicit
+  'Flashlight': Flashlight,
+
+  // People & User
+  'User': User,
+  'Users': Users,
+  'UserCheck': UserCheck,
+  'UserPlus': UserPlus,
+  'Smile': Smile,
+  'Heart': Heart,
+  'ThumbsUp': ThumbsUp,
+  'Stethoscope': Stethoscope,
+  'GraduationCap': GraduationCap,
+
+  // Commercial & Retail
+  'ShoppingCart': ShoppingCart,
+  'ShoppingBag': ShoppingBag,
+  'Briefcase': Briefcase,
+  'Calculator': Calculator,
+  'DollarSign': DollarSign,
+  'CircleDollarSign': CircleDollarSign,
+  'CreditCard': Wallet, // Using Wallet as proxy
+  'Receipt': Receipt,
+  'Tag': Tag,
+  'Ticket': Ticket,
+  'Gift': Gift,
+  'Trophy': Trophy,
+  'Medal': Medal,
+
+  // Food & Drink
+  'Coffee': Coffee,
+  'Wine': Wine,
+
+  // Media & Audio
+  'Speaker': Speaker,
+  'Mic': Mic,
+  'Headphones': Headphones,
+  'Radio': Radio,
+  'Tv': Tv,
+  'Film': Film,
+  'Music': Music,
+  'Image': Image,
+  'Play': Play,
+  'Pause': Pause,
+  'Volume': Volume2,
+  'Cast': Cast,
+  'Gamepad': Gamepad2,
+
+  // Misc
+  'Link': Link,
+  'Paperclip': Paperclip,
+  'Pin': Pin,
+  'Bell': Bell,
+  'Megaphone': Megaphone,
+  'Mail': Mail,
+  'MessageCircle': MessageCircle,
+  'Phone': Phone,
+  'Share': Share2,
+  'Info': Info,
+  'Sparkles': Sparkles,
+  'Ghost': Skull, // Mapping Skull
+  'Palette': Palette,
 };
 
 interface AssetTypeManagerProps {
@@ -45,6 +243,7 @@ export const AssetTypeManager: React.FC<AssetTypeManagerProps> = ({ projects }) 
     visibility: 'global',
     iconName: 'Building2'
   });
+  const [iconSearch, setIconSearch] = useState('');
 
   const handleSave = () => {
     if (!formData.name) return;
@@ -69,6 +268,7 @@ export const AssetTypeManager: React.FC<AssetTypeManagerProps> = ({ projects }) 
     setIsModalOpen(false);
     setEditingType(null);
     setFormData({ name: '', visibility: 'global', iconName: 'Building2' });
+    setIconSearch('');
   };
 
   const handleDelete = (id: string) => {
@@ -181,13 +381,13 @@ export const AssetTypeManager: React.FC<AssetTypeManagerProps> = ({ projects }) 
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6 shrink-0">
               <h3 className="text-xl font-black text-slate-900">{editingType ? 'Edit Type' : 'New Asset Type'}</h3>
               <button onClick={closeModal} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 overflow-y-auto custom-scrollbar flex-grow pr-1">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Type Name</label>
                 <input 
@@ -214,25 +414,54 @@ export const AssetTypeManager: React.FC<AssetTypeManagerProps> = ({ projects }) 
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Select Icon</label>
-                <div className="grid grid-cols-4 gap-4">
-                  {Object.keys(IconRegistry).map(key => {
-                    const Icon = IconRegistry[key];
-                    return (
-                      <button 
-                        key={key}
-                        onClick={() => setFormData({ ...formData, iconName: key })}
-                        className={`p-4 rounded-xl flex items-center justify-center border-2 transition-all ${formData.iconName === key ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 hover:border-slate-300 text-slate-400'}`}
-                      >
-                        <Icon size={24} />
-                      </button>
-                    )
-                  })}
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Select Icon</label>
+                  <div className="relative">
+                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                     <input 
+                        type="text" 
+                        placeholder="Search icons..." 
+                        className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        value={iconSearch}
+                        onChange={e => setIconSearch(e.target.value)}
+                     />
+                  </div>
+                </div>
+                
+                <div className="h-64 overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl p-2 bg-slate-50/50">
+                  <div className="grid grid-cols-6 gap-2">
+                    {Object.keys(IconRegistry)
+                      .filter(key => key.toLowerCase().includes(iconSearch.toLowerCase()))
+                      .map(key => {
+                        const Icon = IconRegistry[key];
+                        const isSelected = formData.iconName === key;
+                        return (
+                          <button 
+                            key={key}
+                            title={key}
+                            onClick={() => setFormData({ ...formData, iconName: key })}
+                            className={`aspect-square rounded-xl flex items-center justify-center transition-all ${
+                              isSelected 
+                                ? 'bg-blue-600 text-white shadow-md scale-105' 
+                                : 'bg-white border border-slate-100 text-slate-400 hover:border-blue-200 hover:text-blue-500 hover:bg-blue-50'
+                            }`}
+                          >
+                            <Icon size={20} strokeWidth={isSelected ? 2.5 : 2} />
+                          </button>
+                        )
+                    })}
+                  </div>
+                  {Object.keys(IconRegistry).filter(key => key.toLowerCase().includes(iconSearch.toLowerCase())).length === 0 && (
+                      <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                          <Search size={24} className="mb-2 opacity-50" />
+                          <span className="text-[10px] font-bold uppercase">No icons found</span>
+                      </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="mt-10 flex gap-3">
+            <div className="mt-8 flex gap-3 shrink-0">
               <button 
                 onClick={closeModal}
                 className="flex-1 py-3 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
@@ -253,3 +482,4 @@ export const AssetTypeManager: React.FC<AssetTypeManagerProps> = ({ projects }) 
     </div>
   );
 };
+    

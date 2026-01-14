@@ -38,7 +38,8 @@ import {
   Move,
   CloudSun,
   UploadCloud,
-  FileDown
+  FileDown,
+  Eye
 } from 'lucide-react';
 
 declare var L: any; // Leaflet global
@@ -237,14 +238,16 @@ const DeviceCard: React.FC<{
   device: DeviceData; 
   isSelected: boolean; 
   onToggle: (id: string) => void;
-}> = ({ device, isSelected, onToggle }) => {
+  isMenuOpen: boolean;
+  onMenuToggle: (e: React.MouseEvent) => void;
+}> = ({ device, isSelected, onToggle, isMenuOpen, onMenuToggle }) => {
   const isOnline = device.status === 'online';
   const isNeverSeen = device.status === 'never_seen';
   
   return (
     <div 
       onClick={() => onToggle(device.id)}
-      className={`relative bg-white border rounded-2xl overflow-hidden transition-all duration-300 group cursor-pointer select-none ${
+      className={`relative bg-white border rounded-2xl transition-all duration-300 group cursor-pointer select-none ${
         isSelected ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl' : 'border-slate-200 shadow-sm hover:border-slate-300'
       }`}
     >
@@ -254,7 +257,7 @@ const DeviceCard: React.FC<{
         </div>
       </div>
 
-      <div className={`p-4 flex items-center justify-between border-b ${isSelected ? 'bg-blue-50/40 border-blue-50' : 'border-slate-50'}`}>
+      <div className={`p-4 flex items-center justify-between border-b rounded-t-2xl ${isSelected ? 'bg-blue-50/40 border-blue-50' : 'border-slate-50'}`}>
         <div className="flex flex-col">
           <h4 className={`text-sm font-black transition-colors ${isSelected ? 'text-blue-700' : 'text-slate-800'}`}>{device.name}</h4>
           <p className="text-[10px] font-medium text-slate-400 font-mono tracking-tight">{device.sn}</p>
@@ -283,14 +286,33 @@ const DeviceCard: React.FC<{
       </div>
       
       {/* Footer with More Button */}
-      <div className="p-3 border-t bg-slate-50/50 flex items-center justify-between">
+      <div className="p-3 border-t bg-slate-50/50 flex items-center justify-between rounded-b-2xl">
          <div className="flex items-center gap-2">
             <Clock size={12} className="text-slate-300" />
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{device.lastSeen}</span>
          </div>
-         <button className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-blue-600 transition-colors" onClick={(e) => { e.stopPropagation(); /* Action handler */ }}>
-            <MoreVertical size={14} />
-         </button>
+         <div className="relative">
+             <button 
+                className={`p-1 rounded transition-colors ${isMenuOpen ? 'bg-slate-200 text-blue-600' : 'hover:bg-slate-200 text-slate-400 hover:text-blue-600'}`} 
+                onClick={onMenuToggle}
+             >
+                <MoreVertical size={14} />
+             </button>
+             {isMenuOpen && (
+                 <div className="absolute bottom-full right-0 mb-2 w-36 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-bottom-right">
+                    <button onClick={(e) => { e.stopPropagation(); alert('View Details'); }} className="w-full text-left px-3 py-2.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2 transition-colors">
+                        <Eye size={14} /> View Details
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); alert('Move Device'); }} className="w-full text-left px-3 py-2.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2 transition-colors">
+                        <Navigation size={14} /> Move Device
+                    </button>
+                    <div className="h-px bg-slate-100 my-0.5"></div>
+                    <button onClick={(e) => { e.stopPropagation(); alert('Delete Device'); }} className="w-full text-left px-3 py-2.5 text-[10px] font-bold text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                        <Trash2 size={14} /> Delete Device
+                    </button>
+                 </div>
+             )}
+         </div>
       </div>
     </div>
   );
@@ -330,6 +352,7 @@ export const DeviceManager: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'plan' | 'map'>('grid');
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<Set<string>>(new Set());
   const [onlyCurrentNode, setOnlyCurrentNode] = useState(false);
+  const [activeDeviceMenuId, setActiveDeviceMenuId] = useState<string | null>(null);
   
   // Floor plan states
   const [scale, setScale] = useState(0.85);
@@ -389,13 +412,19 @@ export const DeviceManager: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) setIsActionMenuOpen(false);
+      // Close device menu if clicked outside. 
+      // We rely on stopPropagation on the toggle button to prevent immediate closing when toggling.
+      // But we need to check if the click target is NOT the button that toggles it. 
+      // Actually, simplest is just to close. The button's onClick will run first or we manage it there.
+      // Since button onClick uses stopPropagation, this global listener only catches clicks outside the button.
+      setActiveDeviceMenuId(null);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
-    <div className="flex h-full bg-slate-50/30 gap-6 animate-in fade-in duration-500 overflow-hidden relative">
+    <div className="flex h-[calc(100vh-13rem)] min-h-[600px] bg-slate-50/30 gap-6 animate-in fade-in duration-500 overflow-hidden relative">
       <aside className="w-72 bg-white rounded-2xl border border-slate-200 flex flex-col shrink-0 overflow-hidden shadow-sm">
         <div className="p-5 border-b border-slate-50 flex items-center justify-between">
           <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Hierarchy</h3>
@@ -498,7 +527,19 @@ export const DeviceManager: React.FC = () => {
             viewMode === 'grid' ? (
               <div className="h-full overflow-y-auto custom-scrollbar pb-6 px-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                  {filteredDevices.map(device => <DeviceCard key={device.id} device={device} isSelected={selectedDeviceIds.has(device.id)} onToggle={toggleDeviceSelection} />)}
+                  {filteredDevices.map(device => (
+                    <DeviceCard 
+                      key={device.id} 
+                      device={device} 
+                      isSelected={selectedDeviceIds.has(device.id)} 
+                      onToggle={toggleDeviceSelection} 
+                      isMenuOpen={activeDeviceMenuId === device.id}
+                      onMenuToggle={(e) => {
+                          e.stopPropagation();
+                          setActiveDeviceMenuId(activeDeviceMenuId === device.id ? null : device.id);
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             ) : viewMode === 'plan' ? (

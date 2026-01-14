@@ -31,30 +31,48 @@ import {
   Hash,
   Cpu,
   Zap,
-  HardDrive
+  HardDrive,
+  FolderTree,
+  Building2,
+  Layers,
+  Box
 } from 'lucide-react';
 import { GlobalDevice, GlobalDeviceViewMode } from '../types';
+import { DeviceGroupManager } from './DeviceGroupManager';
 
-const MOCK_GLOBAL_DEVICES: GlobalDevice[] = Array.from({ length: 50 }).map((_, i) => ({
-  id: `dev-${i + 1000}`,
-  name: i % 2 === 0 ? 'AM308 IAQ Sensor' : 'EM300 Environment Sensor',
-  sn: `SN2510${100 + i}X`,
-  devEUI: `24E124C000${200 + i}E`,
-  status: i % 5 === 0 ? 'offline' : i % 8 === 0 ? 'never_seen' : 'online',
-  lastSeen: '2025-12-30 14:30:05',
-  productName: i % 2 === 0 ? '9 in 1 IAQ Sensor' : 'Temp/Humid Sensor',
-  model: i % 2 === 0 ? 'AM308' : 'EM300-TH',
-  battery: i % 10 === 0 ? 15 : i % 5 === 0 ? 45 : 85,
-  rssi: `-${60 + (i % 40)} dBm`,
-  sf: `SF${7 + (i % 6)}`,
-  frameCount: 1200 + (i * 10),
-  firmwareVersion: `V1.${i % 3}.2`,
-  projectName: i % 3 === 0 ? null : (i % 5 === 0 ? 'Grand Horizon Smart Mall Global Headquarters' : ['CBD Smart Bldg', 'Grand Mall', 'GreenFarm'][i % 3]),
-  rpsStatus: i % 4 === 0 ? 'inactive' : 'active',
-  imageUrl: 'https://www.milesight-iot.com/wp-content/uploads/2021/08/AM300-Series-Ambience-Monitoring-Sensor.png',
-  shareType: i % 7 === 0 ? 'by_me' : (i % 11 === 0 ? 'to_me' : undefined),
-  validUntil: i % 7 === 0 || i % 11 === 0 ? '2026-05-20 23:59:59' : undefined
-}));
+const MOCK_GLOBAL_DEVICES: GlobalDevice[] = Array.from({ length: 50 }).map((_, i) => {
+  // Logic to simulate devices being in EITHER a project OR a device group
+  const isInProject = i % 3 !== 0; // 2/3rds in project
+  const projectName = isInProject 
+    ? (i % 5 === 0 ? 'Grand Horizon Smart Mall Global Headquarters' : ['CBD Smart Bldg', 'Grand Mall', 'GreenFarm'][i % 3]) 
+    : null;
+  
+  const deviceGroupName = !isInProject 
+    ? (i % 2 === 0 ? 'Default Group' : 'Warehouse Staging') 
+    : null;
+
+  return {
+    id: `dev-${i + 1000}`,
+    name: i % 2 === 0 ? 'AM308 IAQ Sensor' : 'EM300 Environment Sensor',
+    sn: `SN2510${100 + i}X`,
+    devEUI: `24E124C000${200 + i}E`,
+    status: i % 5 === 0 ? 'offline' : i % 8 === 0 ? 'never_seen' : 'online',
+    lastSeen: '2025-12-30 14:30:05',
+    productName: i % 2 === 0 ? '9 in 1 IAQ Sensor' : 'Temp/Humid Sensor',
+    model: i % 2 === 0 ? 'AM308' : 'EM300-TH',
+    battery: i % 10 === 0 ? 15 : i % 5 === 0 ? 45 : 85,
+    rssi: `-${60 + (i % 40)} dBm`,
+    sf: `SF${7 + (i % 6)}`,
+    frameCount: 1200 + (i * 10),
+    firmwareVersion: `V1.${i % 3}.2`,
+    projectName: projectName,
+    deviceGroupName: deviceGroupName,
+    rpsStatus: i % 4 === 0 ? 'inactive' : 'active',
+    imageUrl: 'https://www.milesight-iot.com/wp-content/uploads/2021/08/AM300-Series-Ambience-Monitoring-Sensor.png',
+    shareType: i % 7 === 0 ? 'by_me' : (i % 11 === 0 ? 'to_me' : undefined),
+    validUntil: i % 7 === 0 || i % 11 === 0 ? '2026-05-20 23:59:59' : undefined
+  };
+});
 
 export const GlobalDeviceManager: React.FC = () => {
   const [viewMode, setViewMode] = useState<GlobalDeviceViewMode>('main');
@@ -67,6 +85,8 @@ export const GlobalDeviceManager: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<GlobalDevice | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
+  const [showGroupManager, setShowGroupManager] = useState(false);
+
   const actionRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -144,9 +164,14 @@ export const GlobalDeviceManager: React.FC = () => {
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-500 relative">
       <style>{`
-        .tooltip-box { visibility: hidden; opacity: 0; transition: all 0.2s; position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -4px) scale(0.95); }
+        .tooltip-box { visibility: hidden; opacity: 0; transition: all 0.2s; position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -4px) scale(0.95); pointer-events: none; }
         .tooltip-container:hover .tooltip-box { visibility: visible; opacity: 1; transform: translate(-50%, -8px) scale(1); }
       `}</style>
+
+      {/* Device Group Manager Modal */}
+      {showGroupManager && (
+        <DeviceGroupManager onClose={() => setShowGroupManager(false)} />
+      )}
 
       {/* Top Header & Stats */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
@@ -176,12 +201,21 @@ export const GlobalDeviceManager: React.FC = () => {
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4 mb-6 relative z-[200]">
         <div className="flex items-center gap-3">
           <div className="relative" ref={actionRef}>
-            <button 
-              onClick={() => setActiveActionMenu(!activeActionMenu)}
-              className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center gap-2 active:scale-95"
-            >
-              Action <ChevronDown size={14} className={`transition-transform ${activeActionMenu ? 'rotate-180' : ''}`} />
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setActiveActionMenu(!activeActionMenu)}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center gap-2 active:scale-95"
+              >
+                Action <ChevronDown size={14} className={`transition-transform ${activeActionMenu ? 'rotate-180' : ''}`} />
+              </button>
+              <button 
+                onClick={() => setShowGroupManager(true)}
+                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:text-blue-600 transition-all flex items-center gap-2 active:scale-95 shadow-sm"
+              >
+                <FolderTree size={16} /> Manage Device Groups
+              </button>
+            </div>
+            
             {activeActionMenu && (
               <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="p-3 space-y-4">
@@ -271,7 +305,7 @@ export const GlobalDeviceManager: React.FC = () => {
                     <th className="px-3 py-3 w-[15%]">Product Info</th>
                     <th className="px-3 py-3 w-16 text-center">Battery</th>
                     {!isSharedView ? (
-                      <th className="px-3 py-3 w-[12%]">Project</th>
+                      <th className="px-3 py-3 w-[12%]">Project / Device Group</th>
                     ) : (
                       <th className="px-3 py-3 w-[15%]">Valid Until</th>
                     )}
@@ -313,7 +347,7 @@ export const GlobalDeviceManager: React.FC = () => {
                               ) : (
                                 <UserCheck size={13} className="text-purple-500 hover:scale-110 transition-transform" />
                               )}
-                              <div className="tooltip-box z-[100] px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded shadow-2xl whitespace-nowrap">
+                              <div className="tooltip-box z-[1000] px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded shadow-2xl whitespace-nowrap">
                                 {d.shareType === 'by_me' ? 'Shared by me' : 'Shared to me'}
                                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                               </div>
@@ -361,7 +395,7 @@ export const GlobalDeviceManager: React.FC = () => {
                               ) : (
                                 <UserCheck size={13} className="text-purple-500 hover:scale-110 transition-transform" />
                               )}
-                              <div className="tooltip-box z-[100] px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded shadow-2xl whitespace-nowrap">
+                              <div className="tooltip-box z-[1000] px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded shadow-2xl whitespace-nowrap">
                                 {d.shareType === 'by_me' ? 'Shared by me' : 'Shared to me'}
                                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                               </div>
@@ -405,13 +439,29 @@ export const GlobalDeviceManager: React.FC = () => {
                         </div>
                       </td>
                       {!isSharedView ? (
-                        <td className="px-3 py-3 overflow-hidden">
+                        <td className="px-3 py-3">
                           {d.projectName ? (
-                            <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md w-fit max-w-full">
-                              <span className="text-[8px] font-black uppercase truncate">{d.projectName}</span>
+                            <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md w-fit max-w-full tooltip-container relative cursor-help">
+                              <Building2 size={10} className="shrink-0" />
+                              <span className="text-[8px] font-black uppercase truncate max-w-[120px]">{d.projectName}</span>
+                              <div className="tooltip-box z-[1000] px-3 py-2 bg-slate-900 text-white rounded-lg shadow-2xl whitespace-nowrap">
+                                <div className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mb-0.5">Project</div>
+                                <div className="text-xs font-bold">{d.projectName}</div>
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                              </div>
+                            </div>
+                          ) : d.deviceGroupName ? (
+                            <div className="flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-md w-fit max-w-full tooltip-container relative cursor-help">
+                              <Layers size={10} className="shrink-0" />
+                              <span className="text-[8px] font-black uppercase truncate max-w-[120px]">{d.deviceGroupName}</span>
+                              <div className="tooltip-box z-[1000] px-3 py-2 bg-slate-900 text-white rounded-lg shadow-2xl whitespace-nowrap">
+                                <div className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mb-0.5">Device Group</div>
+                                <div className="text-xs font-bold">{d.deviceGroupName}</div>
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                              </div>
                             </div>
                           ) : (
-                            <span className="text-[8px] font-bold text-slate-300 italic uppercase">None</span>
+                            <span className="text-[8px] font-bold text-slate-300 italic uppercase">Unassigned</span>
                           )}
                         </td>
                       ) : (
@@ -419,7 +469,7 @@ export const GlobalDeviceManager: React.FC = () => {
                           <div className="flex items-center gap-1.5 text-slate-500 tooltip-container relative cursor-help">
                             <CalendarClock size={12} className="shrink-0 text-slate-300" />
                             <span className="text-[10px] font-bold font-mono whitespace-nowrap">{d.validUntil || '-'}</span>
-                            <div className="tooltip-box z-[100] px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded shadow-2xl whitespace-nowrap">
+                            <div className="tooltip-box z-[1000] px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded shadow-2xl whitespace-nowrap">
                               At this time, the share will expire.
                               <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                             </div>
@@ -580,9 +630,9 @@ export const GlobalDeviceManager: React.FC = () => {
 
                     {/* Context Group */}
                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 flex items-center gap-1.5"><Globe size={10} /> {selectedDevice.shareType ? 'Expiration' : 'Project'}</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 flex items-center gap-1.5"><Globe size={10} /> {selectedDevice.shareType ? 'Expiration' : 'Context'}</span>
                         <span className="text-xs font-bold text-slate-700 truncate block">
-                          {selectedDevice.shareType ? selectedDevice.validUntil : (selectedDevice.projectName || 'Unassigned')}
+                          {selectedDevice.shareType ? selectedDevice.validUntil : (selectedDevice.projectName || selectedDevice.deviceGroupName || 'Unassigned')}
                         </span>
                     </div>
                   </div>
