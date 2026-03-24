@@ -118,6 +118,7 @@ const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [projects, setProjects] = useState<IoTProject[]>(INITIAL_PROJECTS);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   // Wizard State
   const [showCreateWizard, setShowCreateWizard] = useState(false);
@@ -166,6 +167,7 @@ const App: React.FC = () => {
               setCurrentView('projects');
               setSelectedProjectId(null);
             }}
+            onToggleFullScreen={setIsFullScreen}
           />
         ) : null;
       case 'asset-types':
@@ -361,59 +363,61 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-grow flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-            <HomeIcon size={14} />
-            <ChevronRight size={12} />
-            <span 
-              className={`uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors ${currentView === 'projects' || currentView === 'project-detail' ? 'text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4' : ''}`}
-              onClick={() => { setCurrentView('projects'); setSelectedProjectId(null); }}
-            >
-              Projects Hub
-            </span>
-            {currentView === 'project-detail' && selectedProject && (
-              <>
-                <ChevronRight size={12} />
-                <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4 truncate max-w-[150px]">
-                  {selectedProject.name}
-                </span>
-              </>
-            )}
-            {currentView === 'devices' && (
-              <>
-                <ChevronRight size={12} />
-                <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4">Devices Management</span>
-              </>
-            )}
-            {currentView === 'asset-types' && (
-              <>
-                <ChevronRight size={12} />
-                <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4">Asset Types</span>
-              </>
-            )}
-            {(currentView !== 'projects' && currentView !== 'asset-types' && currentView !== 'project-detail' && currentView !== 'devices') && (
-              <>
-                <ChevronRight size={12} />
-                <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4">{currentView.replace('-', ' ')}</span>
-              </>
-            )}
-          </div>
+        {!isFullScreen && (
+          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+              <HomeIcon size={14} />
+              <ChevronRight size={12} />
+              <span 
+                className={`uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors ${currentView === 'projects' || currentView === 'project-detail' ? 'text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4' : ''}`}
+                onClick={() => { setCurrentView('projects'); setSelectedProjectId(null); }}
+              >
+                Projects Hub
+              </span>
+              {currentView === 'project-detail' && selectedProject && (
+                <>
+                  <ChevronRight size={12} />
+                  <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4 truncate max-w-[150px]">
+                    {selectedProject.name}
+                  </span>
+                </>
+              )}
+              {currentView === 'devices' && (
+                <>
+                  <ChevronRight size={12} />
+                  <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4">Devices Management</span>
+                </>
+              )}
+              {currentView === 'asset-types' && (
+                <>
+                  <ChevronRight size={12} />
+                  <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4">Asset Types</span>
+                </>
+              )}
+              {(currentView !== 'projects' && currentView !== 'asset-types' && currentView !== 'project-detail' && currentView !== 'devices') && (
+                <>
+                  <ChevronRight size={12} />
+                  <span className="uppercase tracking-wider text-slate-800 font-bold underline decoration-blue-600 decoration-2 underline-offset-4">{currentView.replace('-', ' ')}</span>
+                </>
+              )}
+            </div>
 
-          <div className="flex items-center gap-6">
-            <button className="relative text-slate-400 hover:text-slate-600 transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-100">
-              <UserCircle size={16} />
-              Control Panel
-            </button>
-          </div>
-        </header>
+            <div className="flex items-center gap-6">
+              <button className="relative text-slate-400 hover:text-slate-600 transition-colors">
+                <Bell size={20} />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              </button>
+              <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-100">
+                <UserCircle size={16} />
+                Control Panel
+              </button>
+            </div>
+          </header>
+        )}
 
         {/* Scrollable Content */}
-        <div className="flex-grow overflow-y-auto p-8 bg-[#f8fafc]">
-          <div className="w-full">
+        <div className={`flex-grow bg-[#f8fafc] ${isFullScreen ? 'overflow-hidden p-0' : 'overflow-y-auto p-8'}`}>
+          <div className={`w-full ${isFullScreen ? 'h-full' : ''}`}>
             {renderContent()}
           </div>
         </div>

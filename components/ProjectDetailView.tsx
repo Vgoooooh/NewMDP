@@ -28,20 +28,55 @@ import { AssetModule } from './AssetModule';
 import { DeviceManager } from './DeviceManager';
 import { WorkflowManager } from './WorkflowManager';
 import { DeveloperMode } from './DeveloperMode';
+import { DashboardManager } from './DashboardManager';
+import { DashboardCard, Dashboard } from './DashboardCard';
 
 interface ProjectDetailViewProps {
   project: IoTProject;
   onUpdate: (updatedProject: IoTProject) => void;
   onDelete: (projectId: string) => void;
   onBack: () => void;
+  onToggleFullScreen?: (isFullScreen: boolean) => void;
 }
 
-type InternalViewState = 'overview' | ProjectTab | 'developer-mode';
+type InternalViewState = 'overview' | ProjectTab | 'developer-mode' | 'dashboard-manager';
 
-export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onUpdate, onDelete, onBack }) => {
+const INITIAL_DASHBOARDS: Dashboard[] = [
+  {
+    id: 'db-001',
+    name: 'IAQ Demo',
+    description: 'Real-time Indoor Air Quality monitoring for the main office floor.',
+    updatedAt: '2024-05-20 14:30',
+    thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=400&auto=format&fit=crop',
+    isFavorite: true
+  },
+  {
+    id: 'db-002',
+    name: 'Energy Consumption',
+    description: 'Monthly power usage analytics and peak load tracking.',
+    updatedAt: '2024-05-19 09:15',
+    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=400&auto=format&fit=crop',
+    isFavorite: false
+  },
+  {
+    id: 'db-003',
+    name: 'Security & Access',
+    description: 'Live feed status and door access logs.',
+    updatedAt: '2024-05-18 11:45',
+    thumbnail: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=400&auto=format&fit=crop',
+    isFavorite: false
+  }
+];
+
+export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, onUpdate, onDelete, onBack, onToggleFullScreen }) => {
   const [currentInternalView, setCurrentInternalView] = useState<InternalViewState>('overview');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Dashboard State
+  const [dashboards, setDashboards] = useState<Dashboard[]>(INITIAL_DASHBOARDS);
+  const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | null>(null);
+
   const menuRef = useRef<HTMLDivElement>(null);
   
   const [editForm, setEditForm] = useState({
@@ -65,6 +100,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, o
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Effect to toggle full screen mode when entering/exiting dashboard
+  useEffect(() => {
+    if (currentInternalView === 'dashboard-manager' && selectedDashboard) {
+      onToggleFullScreen?.(true);
+    } else {
+      onToggleFullScreen?.(false);
+    }
+    return () => onToggleFullScreen?.(false);
+  }, [currentInternalView, selectedDashboard, onToggleFullScreen]);
+
   const handleUpdate = () => {
     onUpdate({
       ...project,
@@ -73,6 +118,30 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, o
       category: editForm.category
     });
     setIsEditModalOpen(false);
+  };
+
+  const handleDashboardAction = (action: string, dashboard: Dashboard) => {
+    if (action === 'Favorite') {
+      setDashboards(prev => prev.map(d => 
+        d.id === dashboard.id ? { ...d, isFavorite: !d.isFavorite } : d
+      ));
+    } else if (action === 'Delete') {
+      if (window.confirm(`Delete dashboard "${dashboard.name}"?`)) {
+        setDashboards(prev => prev.filter(d => d.id !== dashboard.id));
+      }
+    } else if (action === 'Edit') {
+        alert("Edit dashboard info (modal would open here)");
+    }
+  };
+
+  const handleOpenDashboard = (dashboard: Dashboard) => {
+    setSelectedDashboard(dashboard);
+    setCurrentInternalView('dashboard-manager');
+  };
+
+  const handleCreateDashboard = () => {
+    // Navigate to manager and maybe simulate create click or just show manager
+    setCurrentInternalView('dashboard-manager');
   };
 
   const SummarySection = ({ title, icon: Icon, onEnter, children }: { title: string, icon: any, onEnter: () => void, children?: React.ReactNode }) => (
@@ -139,10 +208,28 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, o
 
   // 如果不是概览模式且不是开发者模式，展示各自模块的独立视图
   if (currentInternalView !== 'overview' && currentInternalView !== 'developer-mode') {
+    // 1. Dashboard Canvas View (Maximized)
+    if (currentInternalView === 'dashboard-manager' && selectedDashboard) {
+      return (
+        <div className="w-full h-full relative z-10">
+          <DashboardManager 
+            dashboards={dashboards} 
+            onUpdateDashboards={setDashboards}
+            selectedDashboard={selectedDashboard}
+            onSelectDashboard={setSelectedDashboard}
+          />
+        </div>
+      );
+    }
+
+    // 2. Other Module Views (With Back Button)
     return (
       <div className="animate-in fade-in duration-300 h-full flex flex-col gap-4">
         <button 
-          onClick={() => setCurrentInternalView('overview')}
+          onClick={() => {
+            if (selectedDashboard) setSelectedDashboard(null);
+            else setCurrentInternalView('overview');
+          }}
           className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold text-sm transition-colors mb-4 w-fit bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm"
         >
           <ChevronRight size={16} className="rotate-180" /> Back to Project Overview
@@ -153,10 +240,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, o
           <DeviceManager />
         ) : currentInternalView === 'workflow' ? (
           <WorkflowManager />
+        ) : currentInternalView === 'dashboard-manager' ? (
+          <DashboardManager 
+            dashboards={dashboards} 
+            onUpdateDashboards={setDashboards}
+            selectedDashboard={selectedDashboard} // Should be null here typically if we are in this branch, but handled for safety
+            onSelectDashboard={setSelectedDashboard}
+          />
         ) : (
           <div className="flex-grow bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center p-20">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-200">
-               {currentInternalView === 'dashboard' && <LayoutDashboard size={48} />}
                {currentInternalView === 'alerts' && <BellRing size={48} />}
                {currentInternalView === 'users' && <Users size={48} />}
             </div>
@@ -232,39 +325,24 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ project, o
       ) : (
         <div className="w-full bg-white/40 backdrop-blur-sm rounded-3xl p-4 border border-slate-100/50">
           {/* Dashboard Section */}
-          <SummarySection title="Dashboard" icon={LayoutDashboard} onEnter={() => setCurrentInternalView('dashboard')}>
-            <div className="flex gap-6 w-full">
-              <div 
-                onClick={() => setCurrentInternalView('dashboard')}
-                className="bg-white border border-slate-200 rounded-2xl overflow-hidden w-80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group"
-              >
-                <div className="h-44 bg-slate-900 relative flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="https://images.unsplash.com/photo-1558444479-2704f605c75f?q=80&w=600&auto=format&fit=crop" 
-                    alt="Dashboard Preview" 
-                    className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-1000" 
+          <SummarySection title="Dashboard" icon={LayoutDashboard} onEnter={() => setCurrentInternalView('dashboard-manager')}>
+            <div className="flex gap-6 w-full flex-wrap">
+              {/* Show Favorite Dashboards */}
+              {dashboards.filter(d => d.isFavorite).map(dashboard => (
+                <div key={dashboard.id} className="w-80">
+                  <DashboardCard 
+                    dashboard={dashboard} 
+                    onClick={handleOpenDashboard} 
+                    onAction={handleDashboardAction} 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60"></div>
-                  <div className="absolute inset-0 bg-blue-600/10 group-hover:bg-blue-600/0 transition-colors"></div>
-                  <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                     <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center">
-                       <LayoutDashboard className="text-white" size={16} />
-                     </div>
-                     <span className="text-white text-xs font-black tracking-widest uppercase">Live View</span>
-                  </div>
                 </div>
-                <div className="p-5">
-                  <p className="text-sm font-black text-slate-800 tracking-tight">System Global Status</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Sync: 2025-12-30</p>
-                    <div className="flex -space-x-2">
-                      {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-slate-100"></div>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
 
-              <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl w-80 flex flex-col items-center justify-center gap-3 group cursor-pointer hover:bg-white hover:border-blue-400 hover:shadow-lg transition-all">
+              {/* Add New Dashboard Card */}
+              <div 
+                onClick={handleCreateDashboard}
+                className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl w-80 flex flex-col items-center justify-center gap-3 group cursor-pointer hover:bg-white hover:border-blue-400 hover:shadow-lg transition-all min-h-[280px]"
+              >
                 <div className="w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-300 group-hover:text-blue-500 group-hover:border-blue-500 group-hover:scale-110 transition-all duration-300">
                   <Plus size={24} strokeWidth={3} />
                 </div>
